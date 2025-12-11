@@ -49,8 +49,6 @@
             width: 100%;
             height: 100%;
             object-fit: contain; 
-            /* Rende i pixel nitidi su schermi ad alta risoluzione */
-            image-rendering: pixelated; 
         }
 
         /* UI Screens */
@@ -180,9 +178,6 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // OTTIMIZZAZIONE GRAFICA PIXEL ART
-    ctx.imageSmoothingEnabled = false;
-
     // --- CARICAMENTO ASSETS ---
     let imagesLoaded = 0;
     const totalImages = 3;
@@ -218,13 +213,12 @@
     let gameRunning = false;
     let score = 0;
     let frame = 0;
-    let gameSpeed = 5;
+    
+    // NOTA SULLA VELOCITÀ:
+    // Se su cellulare è troppo lento, aumenta questo numero (es. metti 7 o 8)
+    let gameSpeed = 5; 
+    
     const GROUND_Y = 580; 
-
-    // VARIABILI PER GESTIONE FPS
-    let lastTime = 0;
-    const fps = 60;
-    const fpsInterval = 1000 / fps; // Circa 16.6ms per frame
 
     const dino = {
         x: 50,
@@ -240,12 +234,8 @@
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('gameOverScreen').style.display = 'none';
         gameRunning = true;
-        
-        // Reset variabili FPS
-        lastTime = performance.now();
-        
         resetVariables();
-        requestAnimationFrame(loop);
+        loop();
     }
 
     function resetVariables() {
@@ -330,35 +320,27 @@
         
         if (dinoImg.complete && dinoImg.naturalHeight !== 0) ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
 
-        // SCORE DRAWING
+        // SCORE DRAWING (Disegna lo score dentro il gioco)
         if (gameRunning) {
             ctx.textAlign = "right";
             ctx.font = "20px 'Press Start 2P'";
-            ctx.strokeStyle = "#FFFFFF";
+            ctx.strokeStyle = "#FFFFFF"; // Bordo bianco
             ctx.lineWidth = 4;
             ctx.strokeText("SCORE: " + score, canvas.width - 20, 50);
-            ctx.fillStyle = "#333333";
+            ctx.fillStyle = "#333333"; // Testo scuro
             ctx.fillText("SCORE: " + score, canvas.width - 20, 50);
         }
     }
 
-    // --- NUOVO GAME LOOP CON CONTROLLO FPS ---
-    function loop(timestamp) {
-        if (!gameRunning) return;
+    function loop() {
+        if (gameRunning) { update(); draw(); requestAnimationFrame(loop); }
+    }
 
-        requestAnimationFrame(loop);
-
-        // Calcola quanto tempo è passato dall'ultimo frame
-        const elapsed = timestamp - lastTime;
-
-        // Se è passato abbastanza tempo (16.6ms), aggiorna il gioco
-        if (elapsed > fpsInterval) {
-            // Aggiusta lastTime per sincronizzarlo (evita drift)
-            lastTime = timestamp - (elapsed % fpsInterval);
-            
-            update();
-            draw();
-        }
+    function gameOver() {
+        gameRunning = false;
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('gameOverScreen').style.display = 'flex'; 
+        draw();
     }
 </script>
 
