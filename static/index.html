@@ -31,7 +31,7 @@
             width: 100vw;
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
-            touch-action: none; /* Disabilita gesti browser */
+            touch-action: none; 
         }
 
         #gameContainer {
@@ -118,12 +118,21 @@
             font-size: 12px;
             cursor: pointer;
             box-shadow: 4px 4px 0px #990000;
-            margin-top: auto;
+            margin-top: auto; /* Spinge in basso il contenuto precedente */
             -webkit-tap-highlight-color: transparent; 
             touch-action: manipulation;
         }
         button:hover { background: #ff4d4d; transform: scale(1.05); }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #990000; }
+
+        /* --- STILE CREDITS --- */
+        .credits {
+            margin-top: 15px;
+            font-size: 8px;
+            color: #777;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
 
         #scoreBoard {
             position: absolute;
@@ -156,6 +165,8 @@
         <p class="info-text">Evita i benchmark... ehm, gli alberi!<br><br>Tocca lo schermo per saltare.</p>
         <p id="loadingText" style="color:red; font-size:8px; margin:0;">Caricamento...</p>
         <button id="startBtn" onclick="startGame()" style="display:none; margin-top: 10px;">GIOCA</button>
+        
+        <p class="credits">Dev: Giuleppe09</p>
     </div>
 
     <div id="gameOverScreen" class="ui-screen">
@@ -167,6 +178,8 @@
 
         <p class="info-text" style="margin-bottom: 10px;">Punteggio: <span id="finalScore" style="color: #FF3333; font-size: 18px;">0</span></p>
         <button onclick="resetGame()">Riprova</button>
+
+        <p class="credits">Dev: Giuleppe09</p>
     </div>
     
     <canvas id="gameCanvas" width="540" height="675"></canvas>
