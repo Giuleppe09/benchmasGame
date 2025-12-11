@@ -118,19 +118,20 @@
             font-size: 12px;
             cursor: pointer;
             box-shadow: 4px 4px 0px #990000;
-            margin-top: auto; /* Spinge in basso il contenuto precedente */
+            margin-top: auto; 
             -webkit-tap-highlight-color: transparent; 
             touch-action: manipulation;
         }
         button:hover { background: #ff4d4d; transform: scale(1.05); }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #990000; }
 
-        /* --- STILE CREDITS --- */
+        /* --- STILE CREDITS AGGIORNATO --- */
         .credits {
             margin-top: 15px;
-            font-size: 8px;
-            color: #777;
+            font-size: 8px; /* Molto piccolo */
+            color: #555;    /* Grigio scuro ma leggibile */
             text-transform: uppercase;
+            line-height: 1.6; /* Spazio tra le righe dei nomi */
             opacity: 0.8;
         }
 
@@ -152,6 +153,7 @@
             .ui-screen { padding: 10px; }
             button { padding: 10px 15px; }
             p.info-text { margin-bottom: 10px; font-size: 8px; }
+            .credits { margin-top: 10px; font-size: 7px; }
         }
     </style>
 </head>
@@ -166,7 +168,10 @@
         <p id="loadingText" style="color:red; font-size:8px; margin:0;">Caricamento...</p>
         <button id="startBtn" onclick="startGame()" style="display:none; margin-top: 10px;">GIOCA</button>
         
-        <p class="credits">Dev: Giuleppe09</p>
+        <div class="credits">
+            Dev: Giuleppe09<br>
+            Grafica: Maurinoski
+        </div>
     </div>
 
     <div id="gameOverScreen" class="ui-screen">
@@ -179,7 +184,10 @@
         <p class="info-text" style="margin-bottom: 10px;">Punteggio: <span id="finalScore" style="color: #FF3333; font-size: 18px;">0</span></p>
         <button onclick="resetGame()">Riprova</button>
 
-        <p class="credits">Dev: Giuleppe09</p>
+        <div class="credits">
+            Dev: Giuleppe09<br>
+            Grafica: Maurinoski
+        </div>
     </div>
     
     <canvas id="gameCanvas" width="540" height="675"></canvas>
@@ -258,7 +266,7 @@
         }
     }
 
-    // --- GESTIONE INPUT (Touch & Keyboard) ---
+    // --- GESTIONE INPUT ---
     function handleInput(e) {
         if (e && e.type !== 'keydown') {
             e.preventDefault();
@@ -268,7 +276,7 @@
         if (!gameRunning) {
              if (document.getElementById('gameOverScreen').style.display === 'flex') resetGame();
              else if (document.getElementById('startScreen').style.display === 'flex' && imagesLoaded === totalImages && e.target.id !== 'startBtn') {
-                 // Tap su schermo per iniziare (opzionale)
+                 // Tap su schermo per iniziare
              }
         } else {
             jump();
@@ -277,7 +285,6 @@
 
     window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleInput(e); });
     
-    // Gestione touch ottimizzata
     canvas.addEventListener('touchstart', handleInput, { passive: false });
     document.getElementById('gameContainer').addEventListener('touchstart', (e) => {
         if(gameRunning) handleInput(e);
