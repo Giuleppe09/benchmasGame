@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CD BENCHMAS - Dino Run</title>
+
+    <meta property="og:title" content="CD BENCHMAS - Dino Run">
+    <meta property="og:description" content="Evita gli alberi! Ritenta Impianti a Marzo se perdi. Gioca ora!">
+    <meta property="og:type" content="website">
+    
+    <meta property="og:image" content="https://benchmasgame.onrender.com/scritte.png">
+    
+    <meta property="og:image:width" content="600">
+    <meta property="og:image:height" content="600">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -25,11 +34,10 @@
         #gameContainer {
             position: relative;
             box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            border: 2px solid #fff; /* Bordo leggermente più sottile su mobile */
+            border: 2px solid #fff; 
             background-color: #333;
             
-            /* --- MODIFICHE RESPONSIVE --- */
-            /* Il container occupa il massimo spazio disponibile mantenendo le proporzioni */
+            /* --- RESPONSIVE --- */
             width: 100%;
             height: 100%;
             max-width: 540px; 
@@ -41,7 +49,6 @@
 
         canvas { 
             display: block;
-            /* Il canvas mantiene la risoluzione interna ma si adatta visivamente */
             width: 100%;
             height: 100%;
             object-fit: contain; 
@@ -58,23 +65,20 @@
             padding: 20px;
             border-radius: 15px;
             border: 4px solid #FF3333;
-            
-            /* Larghezza adattiva per mobile */
             width: 85%; 
             max-width: 380px;
-            
             display: none;
             z-index: 10;
             flex-direction: column;
             align-items: center;
-            box-sizing: border-box; /* Assicura che il padding non rompa la larghezza */
+            box-sizing: border-box;
         }
         
         #startScreen, #gameOverScreen { display: none; }
 
         h1 {
             color: #FF3333;
-            font-size: 18px; /* Leggermente più piccolo di base */
+            font-size: 18px; 
             margin-bottom: 10px;
             text-transform: uppercase;
             text-shadow: 2px 2px #000;
@@ -90,7 +94,7 @@
         }
 
         #uniLogo {
-            height: 60px; /* Ridotto per schermi piccoli */
+            height: 60px; 
             width: auto;
             margin-bottom: 15px;
             display: block;
@@ -98,7 +102,7 @@
         }
 
         p.info-text {
-            font-size: 10px; /* Dimensione leggibile su mobile */
+            font-size: 10px; 
             color: #333;
             line-height: 1.6;
             margin-bottom: 20px;
@@ -108,13 +112,12 @@
             background: #FF3333;
             color: white;
             border: none;
-            padding: 15px 20px; /* Padding ottimizzato per il tocco */
+            padding: 15px 20px;
             font-family: 'Press Start 2P', cursive;
             font-size: 12px;
             cursor: pointer;
             box-shadow: 4px 4px 0px #990000;
             margin-top: auto;
-            /* Evita il tap highlight blu su mobile */
             -webkit-tap-highlight-color: transparent; 
             touch-action: manipulation;
         }
@@ -125,14 +128,14 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            font-size: 14px; /* Adattato per schermi stretti */
+            font-size: 14px;
             color: #333; 
             text-shadow: 2px 2px 0px #fff;
             z-index: 5;
-            pointer-events: none; /* Permette di cliccare attraverso se necessario */
+            pointer-events: none;
         }
 
-        /* --- MEDIA QUERIES PER SCHERMI MOLTO PICCOLI (es. iPhone SE) --- */
+        /* --- MEDIA QUERIES --- */
         @media (max-height: 600px) {
             h1 { font-size: 14px; margin-bottom: 5px; }
             #uniLogo { height: 40px; margin-bottom: 10px; }
@@ -243,35 +246,29 @@
 
     // --- GESTIONE INPUT (Ottimizzata Mobile) ---
     function handleInput(e) {
-        // Previene doppio input (es. touch che simula click) e scroll
         if (e && e.type !== 'keydown') {
             e.preventDefault();
             e.stopPropagation();
         }
 
         if (!gameRunning) {
-             // Gestione riavvio da Start o Game Over
              if (document.getElementById('gameOverScreen').style.display === 'flex') resetGame();
              else if (document.getElementById('startScreen').style.display === 'flex' && imagesLoaded === totalImages && e.target.id !== 'startBtn') {
-                 // Opzionale: Tap ovunque per iniziare se non si clicca il bottone
-                 // startGame(); 
+                 // Opzionale: Tap ovunque per iniziare
              }
         } else {
             jump();
         }
     }
 
-    // Event Listeners
     window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleInput(e); });
     
-    // Touchstart è meglio di click per i giochi mobile (più reattivo)
-    // Aggiungiamo { passive: false } per poter usare preventDefault()
+    // Touchstart con passive:false per prevenire lo scroll
     canvas.addEventListener('touchstart', handleInput, { passive: false });
     document.getElementById('gameContainer').addEventListener('touchstart', (e) => {
         if(gameRunning) handleInput(e);
     }, { passive: false });
 
-    // Manteniamo mousedown per desktop
     canvas.addEventListener('mousedown', handleInput);
 
     function spawnObstacle() {
