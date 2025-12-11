@@ -11,9 +11,7 @@
     <meta property="og:title" content="CD BENCHMAS - Dino Run">
     <meta property="og:description" content="Evita gli alberi! Ritenta Impianti a Marzo se perdi. Gioca ora!">
     <meta property="og:type" content="website">
-    
     <meta property="og:image" content="https://benchmasgame.onrender.com/locandina.jpg">
-    
     <meta property="og:image:width" content="600">
     <meta property="og:image:height" content="600">
 
@@ -36,9 +34,7 @@
 
         #gameContainer {
             position: relative;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            border: 2px solid #fff; 
-            background-color: #333;
+            background-color: transparent; 
             width: 100%;
             height: 100%;
             max-width: 540px; 
@@ -53,6 +49,8 @@
             width: 100%;
             height: 100%;
             object-fit: contain; 
+            /* Rende i pixel nitidi su schermi ad alta risoluzione */
+            image-rendering: pixelated; 
         }
 
         /* UI Screens */
@@ -125,28 +123,15 @@
         button:hover { background: #ff4d4d; transform: scale(1.05); }
         button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #990000; }
 
-        /* --- STILE CREDITS AGGIORNATO --- */
         .credits {
             margin-top: 15px;
-            font-size: 8px; /* Molto piccolo */
-            color: #555;    /* Grigio scuro ma leggibile */
+            font-size: 8px;
+            color: #555;
             text-transform: uppercase;
-            line-height: 1.6; /* Spazio tra le righe dei nomi */
+            line-height: 1.6;
             opacity: 0.8;
         }
 
-        #scoreBoard {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 14px;
-            color: #333; 
-            text-shadow: 2px 2px 0px #fff;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        /* Media Queries per schermi piccoli */
         @media (max-height: 600px) {
             h1 { font-size: 14px; margin-bottom: 5px; }
             #uniLogo { height: 40px; margin-bottom: 10px; }
@@ -160,8 +145,6 @@
 <body>
 
 <div id="gameContainer">
-    <div id="scoreBoard">SCORE: 0</div>
-
     <div id="startScreen" class="ui-screen" style="display: flex;">
         <h1>CD Benchmas<br>Run</h1>
         <p class="info-text">Evita i benchmark... ehm, gli alberi!<br><br>Tocca lo schermo per saltare.</p>
@@ -196,6 +179,9 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+
+    // OTTIMIZZAZIONE GRAFICA PIXEL ART
+    ctx.imageSmoothingEnabled = false;
 
     // --- CARICAMENTO ASSETS ---
     let imagesLoaded = 0;
@@ -235,6 +221,11 @@
     let gameSpeed = 5;
     const GROUND_Y = 580; 
 
+    // VARIABILI PER GESTIONE FPS
+    let lastTime = 0;
+    const fps = 60;
+    const fpsInterval = 1000 / fps; // Circa 16.6ms per frame
+
     const dino = {
         x: 50,
         y: GROUND_Y,
@@ -249,13 +240,16 @@
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('gameOverScreen').style.display = 'none';
         gameRunning = true;
+        
+        // Reset variabili FPS
+        lastTime = performance.now();
+        
         resetVariables();
-        loop();
+        requestAnimationFrame(loop);
     }
 
     function resetVariables() {
         dino.y = GROUND_Y; dino.dy = 0; obstacles = []; score = 0; frame = 0; gameSpeed = 5;
-        document.getElementById('scoreBoard').innerText = "SCORE: 0";
     }
 
     function resetGame() { startGame(); }
@@ -276,7 +270,7 @@
         if (!gameRunning) {
              if (document.getElementById('gameOverScreen').style.display === 'flex') resetGame();
              else if (document.getElementById('startScreen').style.display === 'flex' && imagesLoaded === totalImages && e.target.id !== 'startBtn') {
-                 // Tap su schermo per iniziare
+                 // Tap opzionale
              }
         } else {
             jump();
@@ -317,7 +311,6 @@
             }
             if (obs.x + obs.width < dino.x && !obs.passed) {
                 score++; obs.passed = true;
-                document.getElementById('scoreBoard').innerText = "SCORE: " + score;
                 if (score % 5 === 0) gameSpeed += 0.5;
             }
             if (obs.x + obs.width < -50) { obstacles.splice(i, 1); i--; }
@@ -327,6 +320,7 @@
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         if (bgImg.complete && bgImg.naturalHeight !== 0) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
         if (textImg.complete && textImg.naturalHeight !== 0) ctx.drawImage(textImg, 0, 0, canvas.width, canvas.height);
         
@@ -335,16 +329,36 @@
         for (let obs of obstacles) { ctx.fillText("🎄", obs.x, obs.y + 45); }
         
         if (dinoImg.complete && dinoImg.naturalHeight !== 0) ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
+
+        // SCORE DRAWING
+        if (gameRunning) {
+            ctx.textAlign = "right";
+            ctx.font = "20px 'Press Start 2P'";
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 4;
+            ctx.strokeText("SCORE: " + score, canvas.width - 20, 50);
+            ctx.fillStyle = "#333333";
+            ctx.fillText("SCORE: " + score, canvas.width - 20, 50);
+        }
     }
 
-    function loop() {
-        if (gameRunning) { update(); draw(); requestAnimationFrame(loop); }
-    }
+    // --- NUOVO GAME LOOP CON CONTROLLO FPS ---
+    function loop(timestamp) {
+        if (!gameRunning) return;
 
-    function gameOver() {
-        gameRunning = false;
-        document.getElementById('finalScore').innerText = score;
-        document.getElementById('gameOverScreen').style.display = 'flex'; 
+        requestAnimationFrame(loop);
+
+        // Calcola quanto tempo è passato dall'ultimo frame
+        const elapsed = timestamp - lastTime;
+
+        // Se è passato abbastanza tempo (16.6ms), aggiorna il gioco
+        if (elapsed > fpsInterval) {
+            // Aggiusta lastTime per sincronizzarlo (evita drift)
+            lastTime = timestamp - (elapsed % fpsInterval);
+            
+            update();
+            draw();
+        }
     }
 </script>
 
