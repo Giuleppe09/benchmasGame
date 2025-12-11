@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CD BENCHMAS - Dino Run</title>
+    <style>
+        /* Carichiamo il font pixeloso per i testi di interfaccia */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: 4px solid #fff;
+            width: 540px;
+            height: 675px;
+            background-color: #333;
+        }
+
+        canvas { display: block; }
+
+        /* Schermate UI (Start / Game Over) */
+        .ui-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.98); /* Leggermente più opaco */
+            padding: 25px;
+            border-radius: 15px;
+            border: 4px solid #FF3333;
+            width: 80%;
+            max-width: 380px;
+            display: none;
+            z-index: 10;
+            /* Aggiunto per gestire meglio il contenuto extra */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Nascondiamo di default per gestirlo con JS, ma manteniamo flex quando visibile */
+        #startScreen, #gameOverScreen { display: none; }
+
+        h1 {
+            color: #FF3333;
+            font-size: 20px;
+            margin-bottom: 10px; /* Ridotto margine */
+            text-transform: uppercase;
+            text-shadow: 2px 2px #000;
+            line-height: 1.4;
+        }
+
+        /* --- NUOVO CSS PER SOTTOTITOLO E LOGO --- */
+        .subtitle {
+            color: #FF3333;
+            font-size: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        #uniLogo {
+            /* Impostiamo un'altezza massima per evitare che il logo esploda */
+            height: 80px; 
+            width: auto;
+            margin-bottom: 20px;
+            display: block;
+            /* Un piccolo bordo o ombra per staccarlo dallo sfondo */
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
+        }
+        /* --------------------------------------- */
+
+        p.info-text {
+            font-size: 10px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        button {
+            background: #FF3333;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #990000;
+            margin-top: auto; /* Spinge il bottone in fondo se c'è spazio */
+        }
+        button:hover { background: #ff4d4d; transform: scale(1.05); }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #990000; }
+
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 16px;
+            color: #333; 
+            text-shadow: 2px 2px 0px #fff;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="scoreBoard">SCORE: 0</div>
+
+    <div id="startScreen" class="ui-screen" style="display: flex;">
+        <h1>CD Benchmas<br>Run</h1>
+        <p class="info-text">Evita i benchmark... ehm, gli alberi!<br><br>Premi SPAZIO o tocca per saltare.</p>
+        <p id="loadingText" style="color:red; font-size:8px; margin:0;">Caricamento immagini (0/3)...</p>
+        <button id="startBtn" onclick="startGame()" style="display:none; margin-top: 20px;">START</button>
+    </div>
+
+    <div id="gameOverScreen" class="ui-screen">
+        <h1 style="color: #333; margin-bottom: 5px;">GAME OVER</h1>
+        
+        <p class="subtitle">Ritenta Impianti a Marzo!</p>
+        
+        <img id="uniLogo" src="logo.png" alt="Logo Università" onerror="this.style.display='none'">
+
+        <p class="info-text" style="margin-bottom: 15px;">Punteggio: <span id="finalScore" style="color: #FF3333; font-size: 18px;">0</span></p>
+        <button onclick="resetGame()">Riprova</button>
+    </div>
+    <canvas id="gameCanvas" width="540" height="675"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- CARICAMENTO IMMAGINI (3 PNG) ---
+    let imagesLoaded = 0;
+    const totalImages = 3;
+
+    function checkImagesLoaded() {
+        imagesLoaded++;
+        const loadText = document.getElementById('loadingText');
+        if (loadText) loadText.innerText = `Caricamento immagini (${imagesLoaded}/${totalImages})...`;
+        
+        if (imagesLoaded === totalImages) {
+            if (loadText) loadText.style.display = 'none';
+            document.getElementById('startBtn').style.display = 'block';
+            draw(); // Primo render statico
+        }
+    }
+
+    // 1. Dino
+    const dinoImg = new Image();
+    dinoImg.src = 'dinomauro.png';
+    dinoImg.onload = checkImagesLoaded;
+    dinoImg.onerror = () => alert("Errore: dinomauro.png mancante!");
+
+    // 2. Sfondo
+    const bgImg = new Image();
+    bgImg.src = 'sfondo.png'; 
+    bgImg.onload = checkImagesLoaded;
+    bgImg.onerror = () => alert("Errore: sfondo.png mancante!");
+
+    // 3. Scritte
+    const textImg = new Image();
+    textImg.src = 'scritte.png';
+    textImg.onload = checkImagesLoaded;
+    textImg.onerror = () => alert("Errore: scritte.png mancante!");
+
+    // Nota: Il logo.svg non viene pre-caricato qui perché è nell'HTML, non nel Canvas.
+
+    // --- VARIABILI DI GIOCO ---
+    let gameRunning = false;
+    let score = 0;
+    let frame = 0;
+    let gameSpeed = 5;
+    const GROUND_Y = 580; 
+
+    const dino = {
+        x: 50,
+        y: GROUND_Y,
+        width: 60, height: 60, dy: 0, jumpPower: -14, gravity: 0.8, grounded: true
+    };
+
+    let obstacles = [];
+
+    // --- FUNZIONI ---
+
+    function startGame() {
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('gameOverScreen').style.display = 'none';
+        gameRunning = true;
+        resetVariables();
+        loop();
+    }
+
+    function resetVariables() {
+        dino.y = GROUND_Y; dino.dy = 0; obstacles = []; score = 0; frame = 0; gameSpeed = 5;
+        document.getElementById('scoreBoard').innerText = "SCORE: 0";
+    }
+
+    function resetGame() { startGame(); }
+
+    function jump() {
+        if (dino.grounded && gameRunning) {
+            dino.dy = dino.jumpPower; dino.grounded = false;
+        }
+    }
+
+    // Input handling
+    function handleInput() {
+        if (!gameRunning) {
+             // Se siamo in game over o start screen, il click fa partire il gioco
+             if (document.getElementById('gameOverScreen').style.display === 'flex') resetGame();
+             else if (document.getElementById('startScreen').style.display === 'flex' && imagesLoaded === totalImages) startGame();
+        } else {
+            jump();
+        }
+    }
+    window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleInput(); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); });
+    canvas.addEventListener('mousedown', handleInput);
+
+    function spawnObstacle() {
+        let randomInterval = Math.floor(Math.random() * 50) + 90;
+        if (frame % randomInterval === 0) {
+            obstacles.push({
+                x: canvas.width, y: GROUND_Y, width: 40, height: 50, passed: false
+            });
+        }
+    }
+
+    function update() {
+        if (!gameRunning) return;
+        dino.dy += dino.gravity; dino.y += dino.dy;
+        if (dino.y >= GROUND_Y) { dino.y = GROUND_Y; dino.dy = 0; dino.grounded = true; }
+
+        spawnObstacle();
+
+        for (let i = 0; i < obstacles.length; i++) {
+            let obs = obstacles[i]; obs.x -= gameSpeed;
+            let hitboxInset = 12;
+            if (dino.x < obs.x + obs.width - hitboxInset && dino.x + dino.width - hitboxInset > obs.x &&
+                dino.y < obs.y + obs.height - hitboxInset && dino.y + dino.height > obs.y) {
+                gameOver();
+            }
+            if (obs.x + obs.width < dino.x && !obs.passed) {
+                score++; obs.passed = true;
+                document.getElementById('scoreBoard').innerText = "SCORE: " + score;
+                if (score % 5 === 0) gameSpeed += 0.5;
+            }
+            if (obs.x + obs.width < -50) { obstacles.splice(i, 1); i--; }
+        }
+        frame++;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (bgImg.complete && bgImg.naturalHeight !== 0) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        if (textImg.complete && textImg.naturalHeight !== 0) ctx.drawImage(textImg, 0, 0, canvas.width, canvas.height);
+        ctx.textAlign = "left"; ctx.font = "50px Arial";
+        for (let obs of obstacles) { ctx.fillText("🎄", obs.x, obs.y + 45); }
+        if (dinoImg.complete && dinoImg.naturalHeight !== 0) ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function loop() {
+        if (gameRunning) { update(); draw(); requestAnimationFrame(loop); }
+    }
+
+    function gameOver() {
+        gameRunning = false;
+        document.getElementById('finalScore').innerText = score;
+        // Usa 'flex' per mantenere l'impaginazione centrata
+        document.getElementById('gameOverScreen').style.display = 'flex'; 
+    }
+</script>
+
+</body>
+</html>
