@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CD BENCHMAS - Dino Run</title>
 
+    <link rel="icon" type="image/png" href="dinomauro.png">
+    <link rel="apple-touch-icon" href="dinomauro.png">
+
     <meta property="og:title" content="CD BENCHMAS - Dino Run">
     <meta property="og:description" content="Evita gli alberi! Ritenta Impianti a Marzo se perdi. Gioca ora!">
     <meta property="og:type" content="website">
@@ -13,6 +16,7 @@
     
     <meta property="og:image:width" content="600">
     <meta property="og:image:height" content="600">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -27,8 +31,7 @@
             width: 100vw;
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
-            /* Disabilita gesti touch del browser (scroll, pull-to-refresh) */
-            touch-action: none; 
+            touch-action: none; /* Disabilita gesti browser */
         }
 
         #gameContainer {
@@ -36,8 +39,6 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.8);
             border: 2px solid #fff; 
             background-color: #333;
-            
-            /* --- RESPONSIVE --- */
             width: 100%;
             height: 100%;
             max-width: 540px; 
@@ -54,7 +55,7 @@
             object-fit: contain; 
         }
 
-        /* Schermate UI (Start / Game Over) */
+        /* UI Screens */
         .ui-screen {
             position: absolute;
             top: 50%;
@@ -135,7 +136,7 @@
             pointer-events: none;
         }
 
-        /* --- MEDIA QUERIES --- */
+        /* Media Queries per schermi piccoli */
         @media (max-height: 600px) {
             h1 { font-size: 14px; margin-bottom: 5px; }
             #uniLogo { height: 40px; margin-bottom: 10px; }
@@ -175,7 +176,7 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- CARICAMENTO IMMAGINI ---
+    // --- CARICAMENTO ASSETS ---
     let imagesLoaded = 0;
     const totalImages = 3;
 
@@ -244,7 +245,7 @@
         }
     }
 
-    // --- GESTIONE INPUT (Ottimizzata Mobile) ---
+    // --- GESTIONE INPUT (Touch & Keyboard) ---
     function handleInput(e) {
         if (e && e.type !== 'keydown') {
             e.preventDefault();
@@ -254,7 +255,7 @@
         if (!gameRunning) {
              if (document.getElementById('gameOverScreen').style.display === 'flex') resetGame();
              else if (document.getElementById('startScreen').style.display === 'flex' && imagesLoaded === totalImages && e.target.id !== 'startBtn') {
-                 // Opzionale: Tap ovunque per iniziare
+                 // Tap su schermo per iniziare (opzionale)
              }
         } else {
             jump();
@@ -263,12 +264,12 @@
 
     window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleInput(e); });
     
-    // Touchstart con passive:false per prevenire lo scroll
+    // Gestione touch ottimizzata
     canvas.addEventListener('touchstart', handleInput, { passive: false });
     document.getElementById('gameContainer').addEventListener('touchstart', (e) => {
         if(gameRunning) handleInput(e);
     }, { passive: false });
-
+    
     canvas.addEventListener('mousedown', handleInput);
 
     function spawnObstacle() {
